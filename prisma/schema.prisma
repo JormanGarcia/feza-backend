@@ -1,0 +1,82 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum OperationType {
+  TRANSFER
+  EXCHANGE
+}
+
+enum UserRoles {
+  ADMIN
+  USER
+}
+
+enum OperationStatus {
+  PENDING
+  ACCEPTED
+  COMPLETED
+  CANCELED
+  REJECTED
+  WAITING
+}
+
+enum RequestStatus {
+  COMPLETED
+  CANCELED
+  REJECTED
+  PENDING
+}
+
+model Operation {
+  id           String          @id @default(cuid())
+  users        User[]
+  type         OperationType
+  creationDate DateTime        @default(now())
+  amount       Float
+  status       OperationStatus
+  from         String          @default("USD")
+  to           String          @default("USD")
+  issuer       String          @default("")
+}
+
+model Request {
+  id           String        @id @default(cuid())
+  users        User[]
+  amount       Float
+  creationDate DateTime      @default(now())
+  status       RequestStatus
+  issuer       String
+}
+
+model Notification {
+  id          String @id @default(cuid())
+  slug        String
+  description String
+  title       String
+  user        User   @relation(fields: [userId], references: [id])
+  userId      String
+}
+
+model User {
+  id               String         @id @default(cuid())
+  firstName        String
+  lastName         String
+  creationDate     DateTime       @default(now())
+  email            String         @unique
+  phoneNumber      String         @unique
+  password         String
+  operationHistory Operation[]
+  requests         Request[]
+  role             UserRoles      @default(USER)
+  balance          Float          @default(0)
+  notifications    Notification[]
+}
